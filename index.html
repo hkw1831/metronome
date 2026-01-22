@@ -58,6 +58,37 @@
             transform: translateY(0);
         }
         
+        .settings {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .settings-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+        }
+        
+        .radio-option input {
+            margin-right: 10px;
+        }
+        
         .status {
             text-align: center;
             font-size: 16px;
@@ -87,6 +118,24 @@
 <body>
     <h1>Alternating Metronome</h1>
     
+    <div class="settings">
+        <div class="settings-title">Tone Toggle Interval</div>
+        <div class="radio-group">
+            <label class="radio-option">
+                <input type="radio" name="toggleInterval" value="15" id="interval15">
+                Toggle tone every 15 seconds
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="toggleInterval" value="20" id="interval20">
+                Toggle tone every 20 seconds
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="toggleInterval" value="30" id="interval30" checked>
+                Toggle tone every 30 seconds
+            </label>
+        </div>
+    </div>
+    
     <div class="controls">
         <button id="startBtn">Start</button>
         <button id="stopBtn">Stop</button>
@@ -101,7 +150,7 @@
     <div class="indicator" id="beatIndicator"></div>
     
     <div class="info">
-        <p>The metronome will alternate between Tone 1 and Tone 2 every 30 seconds</p>
+        <p id="infoText">The metronome will alternate between Tone 1 and Tone 2 every 30 seconds</p>
     </div>
 
     <script>
@@ -110,6 +159,7 @@
         let currentTone = 1;
         let intervalId;
         let secondsLeft = 30;
+        let toggleInterval = 30; // Default toggle interval
         
         // Initialize audio context when the page is interacted with
         document.addEventListener('click', initAudioContext, { once: true });
@@ -169,6 +219,16 @@
             // Stop any existing metronome
             stopMetronome();
             
+            // Get the toggle interval from radio buttons
+            const selectedInterval = document.querySelector('input[name="toggleInterval"]:checked');
+            if (selectedInterval) {
+                toggleInterval = parseInt(selectedInterval.value);
+            }
+            
+            // Update info text
+            document.getElementById('infoText').textContent = 
+                `The metronome will alternate between Tone 1 and Tone 2 every ${toggleInterval} seconds`;
+            
             // BPM to milliseconds conversion (60000ms / BPM)
             const interval = Math.floor(60000 / 90);
             
@@ -177,7 +237,7 @@
             metronome = setInterval(playTone, interval);
             
             // Start tone switching countdown
-            secondsLeft = 30;
+            secondsLeft = toggleInterval;
             updateTimerDisplay();
             intervalId = setInterval(() => {
                 secondsLeft--;
@@ -189,7 +249,7 @@
                     document.getElementById('toneDisplay').textContent = `Tone: ${currentTone}`;
                     
                     // Reset countdown
-                    secondsLeft = 30;
+                    secondsLeft = toggleInterval;
                 }
             }, 1000);
         }
@@ -208,6 +268,29 @@
         // Set up event listeners
         document.getElementById('startBtn').addEventListener('click', startMetronome);
         document.getElementById('stopBtn').addEventListener('click', stopMetronome);
+        
+        // Set up event listeners for interval radio buttons
+        document.querySelectorAll('input[name="toggleInterval"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                toggleInterval = parseInt(this.value);
+                
+                // Update info text
+                document.getElementById('infoText').textContent = 
+                    `The metronome will alternate between Tone 1 and Tone 2 every ${toggleInterval} seconds`;
+                
+                // If metronome is already running, restart it with the new interval
+                if (metronome) {
+                    startMetronome();
+                } else {
+                    // Just update the secondsLeft for the display
+                    secondsLeft = toggleInterval;
+                    updateTimerDisplay();
+                }
+            });
+        });
+        
+        // Set default value for the radio buttons
+        document.getElementById('interval30').checked = true;
     </script>
 </body>
 </html>
